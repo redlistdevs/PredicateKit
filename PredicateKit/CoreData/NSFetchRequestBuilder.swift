@@ -25,19 +25,20 @@ protocol NSExpressionConvertible {
   func toNSExpression(options: NSExpressionConversionOptions) -> NSExpression
 }
 
-struct NSExpressionConversionOptions {
-  let keyPathsPrefix: String?
+public struct NSExpressionConversionOptions {
+    public let keyPathsPrefix: String?
+    
+    public init(keyPathsPrefix: String?) {
+        self.keyPathsPrefix = keyPathsPrefix
+    }
 }
 
 struct NSFetchRequestBuilder {
-  struct Options {
-    let keyPathsPrefix: String?
-  }
-
+    
   private let entityName: String
-  private let options: Options
+  private let options: NSExpressionConversionOptions
 
-  init(entityName: String, options: Options = .init(keyPathsPrefix: nil)) {
+  init(entityName: String, options: NSExpressionConversionOptions = .init(keyPathsPrefix: nil)) {
     self.entityName = entityName
     self.options = options
   }
@@ -47,7 +48,7 @@ struct NSFetchRequestBuilder {
   ) -> NSFetchRequest<Result> {
     let fetchRequest = NSFetchRequest<Result>(entityName: entityName)
 
-    fetchRequest.predicate = makePredicate(from: request.predicate)
+    fetchRequest.predicate = request.predicate.nsPredicate
     fetchRequest.sortDescriptors = request.sortCriteria.map(makeSortDescriptor)
     request.limit.flatMap { fetchRequest.fetchLimit = $0 }
     request.offset.flatMap { fetchRequest.fetchOffset = $0 }
@@ -59,110 +60,13 @@ struct NSFetchRequestBuilder {
     request.returnsDistinctResults.flatMap { fetchRequest.returnsDistinctResults = $0 }
     request.shouldRefreshRefetchedObjects.flatMap { fetchRequest.shouldRefreshRefetchedObjects = $0 }
     request.propertiesToGroupBy.flatMap { fetchRequest.propertiesToGroupBy = $0.map { $0.stringValue } }
-    request.havingPredicate.flatMap { fetchRequest.havingPredicate = makePredicate(from: $0) }
+      request.havingPredicate.flatMap { fetchRequest.havingPredicate = $0.nsPredicate() }
     request.includesSubentities.flatMap { fetchRequest.includesSubentities = $0 }
     request.returnsObjectsAsFaults.flatMap { fetchRequest.returnsObjectsAsFaults = $0 }
     
     return fetchRequest
   }
-
-  fileprivate func makePredicate<Root>(from predicate: Predicate<Root>) -> NSPredicate {
-    switch predicate {
-    case let .comparison(comparison):
-      switch comparison.modifier {
-      case .direct, .any, .all:
-        return NSComparisonPredicate(
-          leftExpression: makeExpression(from: comparison.expression),
-          rightExpression: makeExpression(from: comparison.value),
-          modifier: makeComparisonModifier(from: comparison.modifier),
-          type: makeOperator(from: comparison.operator),
-          options: makeComparisonOptions(from: comparison.options)
-        )
-      case .none:
-        return NSCompoundPredicate(notPredicateWithSubpredicate: NSComparisonPredicate(
-          leftExpression: makeExpression(from: comparison.expression),
-          rightExpression: NSExpression(forConstantValue: comparison.value),
-          modifier: makeComparisonModifier(from: comparison.modifier),
-          type: makeOperator(from: comparison.operator),
-          options: makeComparisonOptions(from: comparison.options)
-        ))
-      }
-    case let .boolean(value):
-      return NSPredicate(value: value)
-    case let .and(lhs, rhs):
-      return NSCompoundPredicate(andPredicateWithSubpredicates: [
-        makePredicate(from: lhs),
-        makePredicate(from: rhs)
-      ])
-    case let .or(lhs, rhs):
-      return NSCompoundPredicate(orPredicateWithSubpredicates: [
-        makePredicate(from: lhs),
-        makePredicate(from: rhs)
-      ])
-    case let .not(predicate):
-      return NSCompoundPredicate(notPredicateWithSubpredicate: makePredicate(
-        from: predicate
-      ))
-    }
-  }
-
-  private func makeExpression(from expression: AnyExpression) -> NSExpression {
-    expression.toNSExpression(conversionOptions)
-  }
-
-  private func makeExpression(from primitive: Primitive) -> NSExpression {
-    return NSExpression(forConstantValue: primitive.value)
-  }
-
-  private func makeOperator(from operator: ComparisonOperator) -> NSComparisonPredicate.Operator {
-    switch `operator` {
-    case .beginsWith:
-      return .beginsWith
-    case .between:
-      return .between
-    case .contains:
-      return .contains
-    case .endsWith:
-      return .endsWith
-    case .equal:
-      return .equalTo
-    case .greaterThan:
-      return .greaterThan
-    case .greaterThanOrEqual:
-      return .greaterThanOrEqualTo
-    case .in:
-      return .in
-    case .lessThan:
-      return .lessThan
-    case .lessThanOrEqual:
-      return .lessThanOrEqualTo
-    case .like:
-      return .like
-    case .matches:
-      return .matches
-    case .notEqual:
-      return .notEqualTo
-    }
-  }
-
-  private func makeComparisonOptions(from options: ComparisonOptions) -> NSComparisonPredicate.Options {
-    var comparisonOptions = NSComparisonPredicate.Options()
-
-    if options.contains(.caseInsensitive) {
-      comparisonOptions.formUnion(.caseInsensitive)
-    }
-
-    if options.contains(.diacriticInsensitive) {
-      comparisonOptions.formUnion(.diacriticInsensitive)
-    }
-
-    if options.contains(.normalized) {
-      comparisonOptions.formUnion(.normalized)
-    }
-
-    return comparisonOptions
-  }
-
+    
   private func makeSortDescriptor<T>(from sortCriterion: FetchRequest<T>.SortCriterion<T>) -> NSSortDescriptor {
     guard let comparator = sortCriterion.comparator else {
       return NSSortDescriptor(
@@ -170,7 +74,7 @@ struct NSFetchRequestBuilder {
         ascending: sortCriterion.order == .ascending
       )
     }
-    
+  
     return NSSortDescriptor(
       key: sortCriterion.property.stringValue,
       ascending: sortCriterion.order == .ascending,
@@ -178,28 +82,126 @@ struct NSFetchRequestBuilder {
         guard let lhs = lhs as? T, let rhs = rhs as? T else {
           return .orderedDescending
         }
-        
+      
         return comparator(lhs, rhs)
       }
     )
   }
+}
 
-  private func makeComparisonModifier(from modifier: ComparisonModifier) -> NSComparisonPredicate.Modifier {
-    switch modifier {
-    case .direct:
-      return .direct
-    case .all:
-      return .all
-    case .any:
-      return .any
-    case .none:
-      return .any
+extension Predicate {
+    
+    public var nsPredicate: NSPredicate {
+        nsPredicate()
     }
-  }
+    
+    public func nsPredicate(options: NSExpressionConversionOptions = NSExpressionConversionOptions(keyPathsPrefix: nil)) -> NSPredicate {
+      switch self {
+      case let .comparison(comparison):
+        switch comparison.modifier {
+        case .direct, .any, .all:
+          return NSComparisonPredicate(
+            leftExpression: makeExpression(from: comparison.expression, options: options),
+            rightExpression: makeExpression(from: comparison.value),
+            modifier: makeComparisonModifier(from: comparison.modifier),
+            type: makeOperator(from: comparison.operator),
+            options: makeComparisonOptions(from: comparison.options)
+          )
+        case .none:
+          return NSCompoundPredicate(notPredicateWithSubpredicate: NSComparisonPredicate(
+            leftExpression: makeExpression(from: comparison.expression, options: options),
+            rightExpression: NSExpression(forConstantValue: comparison.value),
+            modifier: makeComparisonModifier(from: comparison.modifier),
+            type: makeOperator(from: comparison.operator),
+            options: makeComparisonOptions(from: comparison.options)
+          ))
+        }
+      case let .boolean(value):
+        return NSPredicate(value: value)
+      case let .and(lhs, rhs):
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [
+            lhs.nsPredicate,
+            rhs.nsPredicate
+        ])
+      case let .or(lhs, rhs):
+        return NSCompoundPredicate(orPredicateWithSubpredicates: [
+            lhs.nsPredicate,
+            rhs.nsPredicate
+        ])
+      case let .not(predicate):
+          return NSCompoundPredicate(notPredicateWithSubpredicate: predicate.nsPredicate)
+      }
+    }
 
-  private var conversionOptions: NSExpressionConversionOptions {
-    .init(keyPathsPrefix: options.keyPathsPrefix)
-  }
+    private func makeExpression(from expression: AnyExpression, options: NSExpressionConversionOptions) -> NSExpression {
+      expression.toNSExpression(options)
+    }
+
+    private func makeExpression(from primitive: Primitive) -> NSExpression {
+      return NSExpression(forConstantValue: primitive.value)
+    }
+
+    private func makeOperator(from operator: ComparisonOperator) -> NSComparisonPredicate.Operator {
+      switch `operator` {
+      case .beginsWith:
+        return .beginsWith
+      case .between:
+        return .between
+      case .contains:
+        return .contains
+      case .endsWith:
+        return .endsWith
+      case .equal:
+        return .equalTo
+      case .greaterThan:
+        return .greaterThan
+      case .greaterThanOrEqual:
+        return .greaterThanOrEqualTo
+      case .in:
+        return .in
+      case .lessThan:
+        return .lessThan
+      case .lessThanOrEqual:
+        return .lessThanOrEqualTo
+      case .like:
+        return .like
+      case .matches:
+        return .matches
+      case .notEqual:
+        return .notEqualTo
+      }
+    }
+
+    private func makeComparisonOptions(from options: ComparisonOptions) -> NSComparisonPredicate.Options {
+      var comparisonOptions = NSComparisonPredicate.Options()
+
+      if options.contains(.caseInsensitive) {
+        comparisonOptions.formUnion(.caseInsensitive)
+      }
+
+      if options.contains(.diacriticInsensitive) {
+        comparisonOptions.formUnion(.diacriticInsensitive)
+      }
+
+      if options.contains(.normalized) {
+        comparisonOptions.formUnion(.normalized)
+      }
+
+      return comparisonOptions
+    }
+
+    private func makeComparisonModifier(from modifier: ComparisonModifier) -> NSComparisonPredicate.Modifier {
+      switch modifier {
+      case .direct:
+        return .direct
+      case .all:
+        return .all
+      case .any:
+        return .any
+      case .none:
+        return .any
+      }
+    }
 }
 
 // MARK: - ComparisonResult
@@ -289,15 +291,12 @@ extension Function: NSExpressionConvertible where Input: NSExpressionConvertible
 
 extension Query: NSExpressionConvertible {
   func toNSExpression(options: NSExpressionConversionOptions) -> NSExpression {
-    let builder = NSFetchRequestBuilder(
-      entityName: "",
-      options: NSFetchRequestBuilder.Options(keyPathsPrefix: "$x")
-    )
+    let options = NSExpressionConversionOptions(keyPathsPrefix: "$x")
 
     return NSExpression(
       forSubquery: NSExpression(forKeyPath: key.stringValue),
       usingIteratorVariable: "x",
-      predicate: builder.makePredicate(from: predicate)
+      predicate: predicate.nsPredicate(options: options)
     )
   }
 }
