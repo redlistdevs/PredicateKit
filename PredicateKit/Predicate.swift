@@ -473,7 +473,20 @@ extension Expression where Value: AnyArrayOrSet {
   }
 }
 
-
+extension Expression where Value == NSSet? {
+    
+    public func all<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.all, self, keyPath)
+    }
+    
+    public func any<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.any, self, keyPath)
+    }
+    
+    public func none<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.none, self, keyPath)
+    }
+}
 
 extension Expression where Value: Primitive {
   public func `in`(_ list: Value...) -> Predicate<Root> {
