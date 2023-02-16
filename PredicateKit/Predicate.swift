@@ -308,9 +308,9 @@ public struct ArrayElementKeyPath<Array, Value>: Expression where Array: Express
   public typealias Root = Array.Root
   public typealias Element = Array.Value.Element
 
-  public let type: ArrayElementKeyPathType
-  public let array: Array
-  public let elementKeyPath: AnyKeyPath
+  let type: ArrayElementKeyPathType
+  let array: Array
+  let elementKeyPath: AnyKeyPath
 }
 
 enum ComparisonOperator {
@@ -348,7 +348,7 @@ public struct ComparisonOptions: OptionSet {
   }
 }
 
-public enum ArrayElementKeyPathType: Equatable {
+enum ArrayElementKeyPathType: Equatable {
   case index(Int)
   case first
   case last
@@ -473,6 +473,21 @@ extension Expression where Value: AnyArrayOrSet {
   }
 }
 
+extension Expression where Value == NSSet? {
+    
+    public func all<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.all, self, keyPath)
+    }
+    
+    public func any<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.any, self, keyPath)
+    }
+    
+    public func none<K, T>(_ keyPath: KeyPath<K, T>) -> ArrayElementKeyPath<Self, T> {
+        .init(.none, self, keyPath)
+    }
+}
+
 extension Expression where Value: Primitive {
   public func `in`(_ list: Value...) -> Predicate<Root> {
     .comparison(.init(self, .in, list))
@@ -585,7 +600,7 @@ extension Predicate: ExpressibleByBooleanLiteral {
 
 // MARK: - Type-erased Types
 
-public struct AnyExpression {
+struct AnyExpression {
   let toNSExpression: (NSExpressionConversionOptions) -> NSExpression
   let comparisonModifier: ComparisonModifier
   private let expression: Any
@@ -724,7 +739,7 @@ extension Comparison {
 }
 
 extension ArrayElementKeyPath {
-  public init(
+  fileprivate init(
     _ type: ArrayElementKeyPathType,
     _ array: Array,
     _ elementKeyPath: AnyKeyPath
