@@ -585,7 +585,7 @@ extension Predicate: ExpressibleByBooleanLiteral {
 
 // MARK: - Type-erased Types
 
-struct AnyExpression {
+public struct AnyExpression {
   let toNSExpression: (NSExpressionConversionOptions) -> NSExpression
   let comparisonModifier: ComparisonModifier
   private let expression: Any

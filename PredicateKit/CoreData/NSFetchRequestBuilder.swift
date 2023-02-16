@@ -60,7 +60,7 @@ struct NSFetchRequestBuilder {
     request.returnsDistinctResults.flatMap { fetchRequest.returnsDistinctResults = $0 }
     request.shouldRefreshRefetchedObjects.flatMap { fetchRequest.shouldRefreshRefetchedObjects = $0 }
     request.propertiesToGroupBy.flatMap { fetchRequest.propertiesToGroupBy = $0.map { $0.stringValue } }
-      request.havingPredicate.flatMap { fetchRequest.havingPredicate = $0.nsPredicate() }
+    request.havingPredicate.flatMap { fetchRequest.havingPredicate = $0.nsPredicate() }
     request.includesSubentities.flatMap { fetchRequest.includesSubentities = $0 }
     request.returnsObjectsAsFaults.flatMap { fetchRequest.returnsObjectsAsFaults = $0 }
     
