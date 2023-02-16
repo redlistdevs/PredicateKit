@@ -26,7 +26,7 @@ extension NSManagedObjectContext {
   ///
   /// - Parameter predicate: The predicate to use to filter the objects in the underlying CoreData store.
   ///
-  /// - Returns: A [FetchRequest](x-source-tag://FetchRequest) that can be customized further using modifiers or executed immediately.
+  /// - Returns: A [PKFetchRequest](x-source-tag://PKFetchRequest) that can be customized further using modifiers or executed immediately.
   ///
   /// ## Example
   ///
@@ -42,7 +42,7 @@ extension NSManagedObjectContext {
   ///       .sorted(by: \.creationDate, .descending)
   ///       .fetchingOnly(\.text, \.creationDate)
   ///
-  public func fetch<Entity>(where predicate: Predicate<Entity>) -> FetchRequest<Entity> {
+  public func fetch<Entity>(where predicate: Predicate<Entity>) -> PKFetchRequest<Entity> {
     .init(context: self, predicate: predicate)
   }
 
@@ -59,14 +59,14 @@ extension NSManagedObjectContext {
   ///     )
   ///
   public func count<Entity: NSManagedObject>(where predicate: Predicate<Entity>) throws -> Int {
-    let request = FetchRequest<Entity>(context: self, predicate: predicate)
+    let request = PKFetchRequest<Entity>(context: self, predicate: predicate)
     return try request.count()
   }
 
   /// Creates a request to fetch all the objects represented by the entity `Entity`.
   ///
   ///
-  /// - Returns: A [FetchRequest](x-source-tag://FetchRequest) that can be customized further using modifiers or executed immediately.
+  /// - Returns: A [PKFetchRequest](x-source-tag://PKFetchRequest) that can be customized further using modifiers or executed immediately.
   ///
   /// ## Example
   ///
@@ -75,7 +75,7 @@ extension NSManagedObjectContext {
   ///       .sorted(by: \.creationDate, .descending)
   ///       .result()
   ///
-  public func fetchAll<Result>() -> FetchRequest<Result> {
+  public func fetchAll<Result>() -> PKFetchRequest<Result> {
     fetch(where: true)
   }
 
@@ -93,15 +93,15 @@ extension NSManagedObjectContext {
   }
 }
 
-// MARK: - FetchRequest
+// MARK: - PKFetchRequest
 
-// Tag: - FetchRequest
+// Tag: - PKFetchRequest
 ///
 /// Represents a set of rules describing how to filter and retrieve a a list of objects of type `Entity`
 /// from CoreData persistent stores.
 ///
-/// You create a `FetchRequest` by calling the function `fetch(where:)` on an object of type `NSManagedObjectContext`.
-/// The resulting `FetchRequest` can be customized using modifiers and/or executed using the `result()` function.
+/// You create a `PKFetchRequest` by calling the function `fetch(where:)` on an object of type `NSManagedObjectContext`.
+/// The resulting `PKFetchRequest` can be customized using modifiers and/or executed using the `result()` function.
 ///
 /// # Example
 ///
@@ -115,7 +115,7 @@ extension NSManagedObjectContext {
 ///  # See also:
 ///  [NSFetchRequest](https://developer.apple.com/documentation/coredata/nsfetchrequest)
 ///
-public struct FetchRequest<Entity: NSManagedObject> {
+public struct PKFetchRequest<Entity: NSManagedObject> {
   /// Represents a sorting criterion that determines how objects of type `T` should be sorted.
   public struct SortCriterion<T> {
     /// A custom comparator for objects of type `T`.
@@ -434,7 +434,7 @@ public struct FetchRequest<Entity: NSManagedObject> {
     return Entity.entity().name ?? String(describing: Entity.self)
   }
 
-  private func updating<T>(_ keyPath: WritableKeyPath<FetchRequest<Entity>, T>, with value: T) -> Self {
+  private func updating<T>(_ keyPath: WritableKeyPath<PKFetchRequest<Entity>, T>, with value: T) -> Self {
     var result = self
     result[keyPath: keyPath] = value
     return result

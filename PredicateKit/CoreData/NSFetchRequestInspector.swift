@@ -22,11 +22,11 @@ import CoreData
 import Foundation
 
 /// Represents an object used to inspect at runtime the underlying `NSFetchRequest`s generated from objects of type
-/// `FetchRequest`.
+/// `PKFetchRequest`.
 ///
 public protocol NSFetchRequestInspector {
   /// Inspects, however fit (e.g. logs, prints, etc.), an `NSFetchRequest` generated from an object of type
-  /// `FetchRequest`.
+  /// `PKFetchRequest`.
   ///
   /// - Note: The `request` parameter is read-only. Modifying it has no effect on the request ultimately
   ///   executed by a `NSManagedObjectContext`.

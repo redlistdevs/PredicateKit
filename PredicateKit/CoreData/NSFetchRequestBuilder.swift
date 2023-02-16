@@ -44,7 +44,7 @@ struct NSFetchRequestBuilder {
   }
 
   func makeRequest<Entity: NSManagedObject, Result: NSFetchRequestResult>(
-    from request: FetchRequest<Entity>
+    from request: PKFetchRequest<Entity>
   ) -> NSFetchRequest<Result> {
     let fetchRequest = NSFetchRequest<Result>(entityName: entityName)
 
@@ -67,7 +67,7 @@ struct NSFetchRequestBuilder {
     return fetchRequest
   }
     
-  private func makeSortDescriptor<T>(from sortCriterion: FetchRequest<T>.SortCriterion<T>) -> NSSortDescriptor {
+  private func makeSortDescriptor<T>(from sortCriterion: PKFetchRequest<T>.SortCriterion<T>) -> NSSortDescriptor {
     guard let comparator = sortCriterion.comparator else {
       return NSSortDescriptor(
         key: sortCriterion.property.stringValue,

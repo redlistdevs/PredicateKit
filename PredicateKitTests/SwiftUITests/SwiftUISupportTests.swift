@@ -26,7 +26,7 @@ import XCTest
 @testable import PredicateKit
 
 // Basic tests to ensure that predicates and fetch requests passed to SwiftUI's `FetchRequest` end up in the
-// view's graph. We don't really test here that our `Predicate`s and `FetchRequest`s are properly converted to
+// view's graph. We don't really test here that our `Predicate`s and `PKFetchRequest`s are properly converted to
 // `NSPredicate`s and `NSFetchRequest`s; we rely on the tests in `NSFetchRequestBuilderTests` and assume the conversion
 // correctness. Here, we just want to ensure that the view's graph will contain the expected `NSFetchRequest`.
 @available(iOS 15.0, watchOS 8.0, tvOS 15.0, macOS 12.0, *)

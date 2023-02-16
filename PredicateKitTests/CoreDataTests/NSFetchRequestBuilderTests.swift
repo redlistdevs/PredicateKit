@@ -1111,7 +1111,7 @@ private class DataStore: NSAtomicStore {
   }
 }
 
-private func makeRequest<T: NSManagedObject>(_ predicate: Predicate<T>) -> FetchRequest<T> {
+private func makeRequest<T: NSManagedObject>(_ predicate: Predicate<T>) -> PKFetchRequest<T> {
   .init(context: NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType), predicate: predicate)
 }
 
