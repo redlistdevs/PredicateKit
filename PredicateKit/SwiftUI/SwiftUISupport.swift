@@ -41,7 +41,7 @@ extension SwiftUI.FetchRequest where Result: NSManagedObject {
   ///       }
   ///
   public init(predicate: Predicate<Result>, animation: Animation? = nil) {
-    self.init(fetchRequest: PKFetchRequest(predicate: predicate), animation: animation)
+    self.init(PKFetchRequest(predicate: predicate), animation: animation)
   }
 
   /// Creates an instance from the provided fetch request and animation.
@@ -52,8 +52,8 @@ extension SwiftUI.FetchRequest where Result: NSManagedObject {
   /// ## Example
   ///
   ///     struct ContentView: View {
-  ///       @SwiftUI.FetchRequest(
-  ///         fetchRequest: PKFetchRequest(predicate: (\Note.text).contains("Hello, World!"))
+  ///       @FetchRequest(
+  ///         PKFetchRequest(predicate: (\Note.text).contains("Hello, World!"))
   ///           .limit(50)
   ///           .offset(100)
   ///           .sorted(by: \Note.creationDate)
@@ -66,7 +66,7 @@ extension SwiftUI.FetchRequest where Result: NSManagedObject {
   ///         }
   ///       }
   ///
-  public init(fetchRequest: PKFetchRequest<Result>, animation: Animation? = nil) {
+  public init(_ fetchRequest: PKFetchRequest<Result>, animation: Animation? = nil) {
     let entityName = Result.entity().name ?? String(describing: Result.self)
     let fetchRequestBuilder = NSFetchRequestBuilder(entityName: entityName)
     self.init(fetchRequest: fetchRequestBuilder.makeRequest(from: fetchRequest), animation: animation)
@@ -80,8 +80,8 @@ extension SwiftUI.FetchRequest where Result: NSManagedObject {
   /// ## Example
   ///
   ///      struct ContentView: View {
-  ///        @SwiftUI.FetchRequest(
-  ///          fetchRequest: PKFetchRequest(predicate: \Note.text == "Hello, World!")),
+  ///        @FetchRequest(
+  ///          PKFetchRequest(predicate: \Note.text == "Hello, World!")),
   ///          transaction: Transaction(animation: .easeIn)
   ///        )
   ///        var notes: FetchedResults<Note>
@@ -93,7 +93,7 @@ extension SwiftUI.FetchRequest where Result: NSManagedObject {
   ///        }
   ///      }
   ///
-  public init(fetchRequest: PKFetchRequest<Result>, transaction: Transaction) {
+  public init(_ fetchRequest: PKFetchRequest<Result>, transaction: Transaction) {
     let entityName = Result.entity().name ?? String(describing: Result.self)
     let fetchRequestBuilder = NSFetchRequestBuilder(entityName: entityName)
     self.init(fetchRequest: fetchRequestBuilder.makeRequest(from: fetchRequest), transaction: transaction)
@@ -113,8 +113,8 @@ extension PKFetchRequest {
   /// ## Example
   ///
   ///       struct ContentView: View {
-  ///        @SwiftUI.FetchRequest(
-  ///          fetchRequest: PKFetchRequest(predicate: (\Note.text).contains("Hello, World!"))
+  ///        @FetchRequest(
+  ///          PKFetchRequest(predicate: (\Note.text).contains("Hello, World!"))
   ///            .sorted(by: \Note.creationDate, .ascending)
   ///            .limit(100)
   ///        )
@@ -147,7 +147,7 @@ extension PKFetchRequest {
   /// ## Example
   ///
   ///       struct ContentView: View {
-  ///        @SwiftUI.FetchRequest()
+  ///        @FetchRequest()
   ///            .sorted(by: \Note.creationDate, .ascending)
   ///            .limit(100)
   ///        )
@@ -165,8 +165,20 @@ extension PKFetchRequest {
   }
 }
 
+@available(iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+public extension PKFetchRequest {
+    
+    static var all: PKFetchRequest {
+        PKFetchRequest()
+    }
+    
+    static func filtered<T>(_ predicate: Predicate<T>) -> PKFetchRequest<T> {
+        PKFetchRequest<T>(predicate: predicate)
+    }
+}
+
 @available(iOS 15.0, *)
-extension FetchedResults where Result: NSManagedObject {
+public extension FetchedResults where Result: NSManagedObject {
     
     var predicate: Predicate<Result>? {
         get {
