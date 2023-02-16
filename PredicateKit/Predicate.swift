@@ -348,7 +348,7 @@ public struct ComparisonOptions: OptionSet {
   }
 }
 
-enum ArrayElementKeyPathType: Equatable {
+public enum ArrayElementKeyPathType: Equatable {
   case index(Int)
   case first
   case last
@@ -724,7 +724,7 @@ extension Comparison {
 }
 
 extension ArrayElementKeyPath {
-  fileprivate init(
+  public init(
     _ type: ArrayElementKeyPathType,
     _ array: Array,
     _ elementKeyPath: AnyKeyPath
