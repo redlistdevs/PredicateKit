@@ -308,9 +308,9 @@ public struct ArrayElementKeyPath<Array, Value>: Expression where Array: Express
   public typealias Root = Array.Root
   public typealias Element = Array.Value.Element
 
-  let type: ArrayElementKeyPathType
-  let array: Array
-  let elementKeyPath: AnyKeyPath
+  public let type: ArrayElementKeyPathType
+  public let array: Array
+  public let elementKeyPath: AnyKeyPath
 }
 
 enum ComparisonOperator {
